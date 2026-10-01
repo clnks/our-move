@@ -1,12 +1,18 @@
 // Encrypts src/index.html with the passcode and writes index.html (the only page GitHub serves).
 // Usage: node build.mjs            (reads the passcode from .passcode)
 //        PASSCODE=new-code node build.mjs
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, readdir } from "node:fs/promises";
 import { webcrypto as crypto } from "node:crypto";
 
 const ITER = 300000;
 const pass = (process.env.PASSCODE || (await readFile(".passcode", "utf8"))).trim();
-const html = await readFile("src/index.html", "utf8");
+// Listing photos in src/img/<listing id>_<n>.jpg are embedded so they stay behind the PIN
+const photos = {};
+for (const f of (await readdir("src/img").catch(() => [])).filter((f) => f.endsWith(".jpg")).sort()) {
+  const id = f.split("_")[0];
+  (photos[id] ||= []).push("data:image/jpeg;base64," + (await readFile("src/img/" + f)).toString("base64"));
+}
+const html = (await readFile("src/index.html", "utf8")).replace("{} /*__PHOTOS__*/", () => JSON.stringify(photos));
 
 const enc = new TextEncoder();
 const salt = crypto.getRandomValues(new Uint8Array(16));
