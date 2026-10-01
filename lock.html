@@ -14,7 +14,7 @@ body{margin:0;min-height:100vh;display:grid;place-items:center;background:#FBF7F
 form{width:100%;max-width:360px;background:#fff;border:1px solid #EADFD3;border-radius:20px;padding:28px;box-shadow:0 6px 24px rgba(43,38,34,.06)}
 h1{font:800 40px/1.1 "Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.035em;margin:0 0 6px}
 p{color:#6F655C;margin:0 0 20px}
-input[type=password]{font:inherit;width:100%;padding:12px 14px;border:1px solid #EADFD3;border-radius:12px;background:#FBF7F2}
+input[type=password]{font:inherit;font-size:22px;letter-spacing:.3em;text-align:center;width:100%;padding:12px 14px;border:1px solid #EADFD3;border-radius:12px;background:#FBF7F2}
 label{display:flex;gap:8px;align-items:center;font-size:14px;color:#6F655C;margin:12px 0 18px}
 button{font:inherit;font-weight:500;width:100%;padding:12px;border:0;border-radius:12px;background:#2B2622;color:#fff;cursor:pointer}
 #err{color:#B4505A;font-size:14px;min-height:20px;margin:10px 0 0}
@@ -23,8 +23,8 @@ button{font:inherit;font-weight:500;width:100%;padding:12px;border:0;border-radi
 <body>
 <form id="f">
   <h1>Our move</h1>
-  <p>Family only. Enter the passcode.</p>
-  <input type="password" id="pw" autocomplete="current-password" placeholder="Passcode" required autofocus>
+  <p>Family only. Enter the PIN.</p>
+  <input type="password" id="pw" inputmode="numeric" autocomplete="off" placeholder="PIN" required autofocus>
   <label><input type="checkbox" id="rem" checked> Remember on this device</label>
   <button id="go">Open</button>
   <div id="err" role="alert"></div>
