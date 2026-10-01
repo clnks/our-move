@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Our move</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#FBF7F2;color:#2B2622;font:16px/1.5 "DM Sans",system-ui,sans-serif;padding:16px}
+form{width:100%;max-width:360px;background:#fff;border:1px solid #EADFD3;border-radius:20px;padding:28px;box-shadow:0 6px 24px rgba(43,38,34,.06)}
+h1{font:400 40px/1.1 "Young Serif",Georgia,serif;margin:0 0 6px}
+p{color:#6F655C;margin:0 0 20px}
+input[type=password]{font:inherit;width:100%;padding:12px 14px;border:1px solid #EADFD3;border-radius:12px;background:#FBF7F2}
+label{display:flex;gap:8px;align-items:center;font-size:14px;color:#6F655C;margin:12px 0 18px}
+button{font:inherit;font-weight:500;width:100%;padding:12px;border:0;border-radius:12px;background:#2B2622;color:#fff;cursor:pointer}
+#err{color:#B4505A;font-size:14px;min-height:20px;margin:10px 0 0}
+</style>
+</head>
+<body>
+<form id="f">
+  <h1>Our move</h1>
+  <p>Family only. Enter the passcode.</p>
+  <input type="password" id="pw" autocomplete="current-password" placeholder="Passcode" required autofocus>
+  <label><input type="checkbox" id="rem" checked> Remember on this device</label>
+  <button id="go">Open</button>
+  <div id="err" role="alert"></div>
+</form>
+<script>
+const P=__PAYLOAD__;
+const un=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function open(pass){
+  const e=new TextEncoder();
+  const base=await crypto.subtle.importKey("raw",e.encode(pass),"PBKDF2",false,["deriveKey"]);
+  const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:un(P.s),iterations:P.n,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
+  const out=await crypto.subtle.decrypt({name:"AES-GCM",iv:un(P.i)},key,un(P.c));
+  const html=new TextDecoder().decode(out);
+  document.open();document.write(html);document.close();
+}
+const get=()=>{try{return localStorage.getItem("om-pass")}catch(e){return null}};
+const saved=get();
+if(saved){open(saved).catch(()=>{try{localStorage.removeItem("om-pass")}catch(e){}})}
+document.getElementById("f").addEventListener("submit",async ev=>{
+  ev.preventDefault();
+  const pw=document.getElementById("pw").value.trim(), btn=document.getElementById("go");
+  btn.textContent="Opening...";btn.disabled=true;
+  try{
+    if(document.getElementById("rem").checked){try{localStorage.setItem("om-pass",pw)}catch(e){}}
+    await open(pw);
+  }catch(e){
+    try{localStorage.removeItem("om-pass")}catch(e){}
+    document.getElementById("err").textContent="That's not it. Try again.";
+    btn.textContent="Open";btn.disabled=false;
+  }
+});
+</script>
+</body>
+</html>
