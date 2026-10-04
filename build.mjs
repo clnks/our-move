@@ -12,7 +12,18 @@ for (const f of (await readdir("src/img").catch(() => [])).filter((f) => f.endsW
   const id = f.split("_")[0];
   (photos[id] ||= []).push("data:image/jpeg;base64," + (await readFile("src/img/" + f)).toString("base64"));
 }
-const html = (await readFile("src/index.html", "utf8")).replace("{} /*__PHOTOS__*/", () => JSON.stringify(photos));
+let html = (await readFile("src/index.html", "utf8")).replace("{} /*__PHOTOS__*/", () => JSON.stringify(photos));
+
+// Private area: a second PIN (in .privatepin) opens the hidden For one tab. Only a salted hash goes in the page.
+let privLock = "{open:false}";
+try {
+  const pin = (await readFile(".privatepin", "utf8")).trim();
+  const ps = crypto.getRandomValues(new Uint8Array(16));
+  const pbase = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveBits"]);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", salt: ps, iterations: 200000, hash: "SHA-256" }, pbase, 256));
+  privLock = `{open:false,s:"${Buffer.from(ps).toString("base64")}",h:"${Buffer.from(bits).toString("base64")}",n:200000}`;
+} catch (e) {}
+html = html.replace("/*__PRIVLOCK__*/{open:false}", () => privLock);
 
 const enc = new TextEncoder();
 const salt = crypto.getRandomValues(new Uint8Array(16));
